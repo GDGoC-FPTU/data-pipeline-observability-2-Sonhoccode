@@ -8,7 +8,7 @@
 
 ## Mo ta
 
-(Mo ta ngan gon bai lab va nhung gi ban da lam)
+Bài lab này xây dựng một pipeline ETL đơn giản bằng Python: đọc dữ liệu JSON, kiểm tra chất lượng dữ liệu, chuẩn hóa trường category, tính giá sau giảm 10%, và lưu kết quả ra CSV. Ngoài phần ETL, repository còn có mô phỏng một agent đơn giản để minh họa tác động của dữ liệu sạch vs dữ liệu “garbage” lên kết quả trả lời.
 
 ---
 
@@ -26,7 +26,7 @@ python solution.py
 
 ### Chay Agent Simulation (Stress Test)
 ```bash
-# Mo ta cach ban chay thi nghiem Clean vs Garbage data
+python agent_simulation.py
 ```
 
 ---
@@ -42,6 +42,11 @@ python solution.py
 
 ---
 
-## Ket qua
+## Kết quả
 
-(Tom tat ket qua: bao nhieu records da xu ly, bao nhieu bi loai, v.v.)
+Chạy với `raw_data.json` cho ra 3 record hợp lệ và loại 2 record lỗi. File output `processed_data.csv` có các cột `discounted_price` và `processed_at`, trong đó `category` đã được chuẩn hóa sang Title Case. Khi chạy `agent_simulation.py`, bộ dữ liệu sạch trả về câu trả lời hợp lý, còn bộ dữ liệu garbage vẫn có thể làm agent đưa ra câu trả lời sai nếu không có thêm layer validation.
+
+### Ghi chú
+- 'solution.py' đã được cài đặt để không crash nếu thiếu file input.
+- 'generate_garbage.py' tạo ra dữ liệu xấu để test độ bền của pipeline và agent.
+- 'experiment_report.md' ghi lại kết quả thí nghiệm và phân

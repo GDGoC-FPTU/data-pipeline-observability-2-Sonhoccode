@@ -22,61 +22,106 @@ Cham diem tu dong:
 
 import json
 import pandas as pd
-import os
 import datetime
+import os
 
 # --- CONFIGURATION ---
-SOURCE_FILE = 'raw_data.json'
-OUTPUT_FILE = 'processed_data.csv'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SOURCE_FILE = os.path.join(BASE_DIR, 'raw_data.json')
+OUTPUT_FILE = os.path.join(BASE_DIR, 'processed_data.csv')
 
 
 def extract(file_path):
+    """
+    Task 1: Doc du lieu JSON tu file.
+
+    Goi y:
+       - Dung json.load() de doc file JSON
+       - Xu ly truong hop file khong ton tai (FileNotFoundError)
+
+    Returns:
+        list: Danh sach cac records (dictionaries)
+    """
+    print(f"Extracting data from {file_path}...")
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
-        print(f"Error: {file_path} not found.")
+        print(f"Source file not found: {file_path}")
+        return []
+    except json.JSONDecodeError as e:
+        print(f"Invalid JSON in {file_path}: {e}")
         return []
 
 
 def validate(data):
+    """
+    Task 2: Kiem tra chat luong du lieu.
+
+    Quy tac validation:
+       - Price phai > 0 (loai bo gia am hoac bang 0)
+       - Category khong duoc rong
+
+    Goi y:
+       - Dung record.get('price', 0) de lay gia
+       - Dung record.get('category') de kiem tra category
+       - In ra so luong record hop le va khong hop le
+
+    Returns:
+        list: Danh sach cac records hop le
+    """
     valid_records = []
     dropped_records = []
-    
+
     for record in data:
-        # Check Price
-        if record.get('price', 0) <= 0:
+        price = record.get('price', 0)
+        category = record.get('category')
+
+        is_valid_price = isinstance(price, (int, float)) and price > 0
+        is_valid_category = isinstance(category, str) and category.strip() != ''
+
+        if not is_valid_price:
             dropped_records.append({"id": record.get('id'), "reason": "Price <= 0"})
             continue
-            
-        # Check Category
-        if not record.get('category'):
+
+        if not is_valid_category:
             dropped_records.append({"id": record.get('id'), "reason": "Missing Category"})
             continue
-            
+
         valid_records.append(record)
-        
+
     print(f"Validation summary: {len(valid_records)} kept, {len(dropped_records)} dropped.")
     if dropped_records:
         print(f"Errors found: {dropped_records}")
     return valid_records
 
 
-
 def transform(data):
-    df = pd.DataFrame(data)
-    
-    # Logic 1: Discount
-    df['discounted_price'] = df['price'] * 0.9
-    
-    # Logic 2: Formatting
-    df['category'] = df['category'].str.title()
-    
-    # Logic 3: Metadata (Observability)
-    df['processed_at'] = datetime.datetime.now().isoformat()
-    
-    return df
+    """
+    Task 3: Ap dung business logic.
 
+    Yeu cau:
+       - Tinh discounted_price = price * 0.9 (giam 10%)
+       - Chuan hoa category thanh Title Case (vi du: "electronics" -> "Electronics")
+       - Them cot processed_at = timestamp hien tai
+
+    Goi y:
+       - Dung pd.DataFrame(data) de tao DataFrame
+       - df['discounted_price'] = df['price'] * 0.9
+       - df['category'] = df['category'].str.title()
+       - df['processed_at'] = datetime.datetime.now().isoformat()
+
+    Returns:
+        pd.DataFrame: DataFrame da duoc transform
+    """
+    if not data:
+        return pd.DataFrame()
+
+    df = pd.DataFrame(data)
+    df['discounted_price'] = df['price'] * 0.9
+    df['category'] = df['category'].astype(str).str.title()
+    df['processed_at'] = datetime.datetime.now().isoformat()
+    return df
 
 
 def load(df, output_path):
@@ -86,7 +131,7 @@ def load(df, output_path):
     Goi y:
        - df.to_csv(output_path, index=False)
     """
-    # TODO: Luu DataFrame ra CSV
+    df.to_csv(output_path, index=False)
     print(f"Data saved to {output_path}")
 
 
